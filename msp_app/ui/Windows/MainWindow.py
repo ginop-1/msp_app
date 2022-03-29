@@ -17,13 +17,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionAbout.triggered.connect(self.about)
         self.ConnectButton.pressed.connect(self.connect_serial)
         self.readButton.pressed.connect(self.append_text)
-        self.AutomaticReadButton.pressed.connect(self.automatic_read_mode)
+        self.AutomaticReadButton.pressed.connect(self.start_automatic_read_mode)
         self.StopAutomaticReadModeButton.pressed.connect(self.stop_automatic_read_mode)
 
         self.PortsComboBox.addItems([f"{port.device} - {port.description}" for port in ports])
 
-    def automatic_read_mode(self):
+    def start_automatic_read_mode(self):
         self.StopAutomaticReadModeButton.setEnabled(True)
+        self.AutomaticReadButton.setEnabled(False)
         # Step 2: Create a QThread object
         self.thread = QThread()
         # Step 3: Create a worker object
@@ -42,6 +43,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Final resets
         self.thread.finished.connect(
             lambda: self.StopAutomaticReadModeButton.setEnabled(False)
+        )
+        self.thread.finished.connect(
+            lambda: self.AutomaticReadButton.setEnabled(True)
         )
 
     def stop_automatic_read_mode(self):

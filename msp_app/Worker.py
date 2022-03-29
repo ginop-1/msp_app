@@ -12,7 +12,7 @@ class Worker(QObject):
     def run(self):
         """Long-running task."""
         while True and self._isRunning:
-            time.sleep(1)
+            time.sleep(0.25)
             self.progress.emit()
         
         self.finished.emit()
