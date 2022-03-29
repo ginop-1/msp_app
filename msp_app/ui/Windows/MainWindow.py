@@ -6,14 +6,16 @@ from ...Worker import Worker
 import serial.tools.list_ports
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtCore import QThread
+from PyQt5.QtGui import QIcon
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.conn = None
         self.setupUi(self)
-        ports = serial.tools.list_ports.comports()
+        self.setWindowIcon(QIcon("./msp_app/ui/imgs/icon.png"))
 
+        ports = serial.tools.list_ports.comports()
         self.actionAbout.triggered.connect(self.about)
         self.ConnectButton.pressed.connect(self.connect_serial)
         self.readButton.pressed.connect(self.append_text)
