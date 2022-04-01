@@ -1,16 +1,16 @@
-import sys
 from PyQt5.QtWidgets import QApplication
+import sys
+import qdarktheme
+
 from msp_app.ui.Windows.MainWindow import MainWindow
 
-class App(QApplication):
+
+class App():
     def __init__(self):
-        super().__init__(sys.argv)
+        self.sysApp = QApplication(sys.argv)
+        self.main_window = MainWindow()
+        self.sysApp.setStyleSheet(qdarktheme.load_stylesheet("light", border="rounded"))
 
     def start(self):
-        self.main_window = MainWindow()
         self.main_window.show()
-        sys.exit(self.exec_())
-
-if __name__ == "__main__":
-    app = App(sys.argv)
-    app.start()
+        sys.exit(self.sysApp.exec_())

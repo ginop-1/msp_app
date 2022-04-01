@@ -1,45 +1,57 @@
 from ..generated.main_window_ui import Ui_MainWindow
 from ..generated.about_dialog_ui import CustomDialog
-from ...serial_test import SerialConnection
+from ...SerialConnection import SerialConnection
 from ...Worker import Worker
 
 import serial.tools.list_ports
 from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, QTimer
 from PyQt5.QtGui import QIcon
+
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.timer=QTimer()
+        self.timer.timeout.connect(self.update_ports)
         self.conn = None
         self.setupUi(self)
-        self.setWindowIcon(QIcon("./msp_app/ui/imgs/icon.png"))
 
-        ports = serial.tools.list_ports.comports()
+        self.setWindowIcon(QIcon("./msp_app/ui/imgs/icon.png"))
+        self.setup_connectors()
+        self.update_ports()
+
+
+    def setup_connectors(self):
         self.actionAbout.triggered.connect(self.about)
         self.ConnectButton.pressed.connect(self.connect_serial)
         self.readButton.pressed.connect(self.append_text)
         self.AutomaticReadButton.pressed.connect(self.start_automatic_read_mode)
         self.StopAutomaticReadModeButton.pressed.connect(self.stop_automatic_read_mode)
 
+    def update_ports(self):
+        ports = serial.tools.list_ports.comports()
+        self.PortsComboBox.clear()
         self.PortsComboBox.addItems([f"{port.device} - {port.description}" for port in ports])
+        if self.PortsComboBox.currentText() == "":
+            self.ConnectButton.setEnabled(False)
+            self.timer.start(3000)
+        else:
+            self.ConnectButton.setText("Connect")
+            self.ConnectButton.setEnabled(True)
+            self.timer.stop()
 
     def start_automatic_read_mode(self):
         self.StopAutomaticReadModeButton.setEnabled(True)
         self.AutomaticReadButton.setEnabled(False)
-        # Step 2: Create a QThread object
         self.thread = QThread()
-        # Step 3: Create a worker object
         self.worker = Worker()
-        # Step 4: Move worker to the thread
         self.worker.moveToThread(self.thread)
-        # Step 5: Connect signals and slots
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
         self.worker.progress.connect(self.append_text)
-        # Step 6: Start the thread
         self.thread.start()
 
         # Final resets
@@ -61,7 +73,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.conn:
             return
         port = self.PortsComboBox.currentText().split(" - ")[0]
-        self.conn = SerialConnection(port=port)
+        try:
+            self.conn = SerialConnection(port=port)
+        except Exception:
+            self.ConnectButton.setText("No ports available")
+            self.ConnectButton.setEnabled(False)
+            self.PortsComboBox.clear()
+            self.timer.start(3000)
+            return
         self.ConnectButton.setText("Connected")
         self.ConnectButton.setEnabled(False)
 
@@ -71,5 +90,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             temperature = self.conn.read().split("\n")[-2]
         except AttributeError:
+            return
+        except OSError:
+            self.worker.stop()
+            self.ConnectButton.setText("No ports available")
+            self.ConnectButton.setEnabled(False)
+            self.PortsComboBox.clear()
+            self.timer.start(3000)
             return
         self.textBrowser.append(temperature)
