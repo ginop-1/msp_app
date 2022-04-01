@@ -1,4 +1,4 @@
-import serial, time
+import serial
 
 class SerialConnection():
     def __init__(self, port: str):
@@ -8,7 +8,7 @@ class SerialConnection():
     def read(self):
         if self.conn.inWaiting() > 0:
             return self.conn.read(self.conn.inWaiting()).decode("ascii")
-    
+
     def exit(self):
         self.conn.close()
 
