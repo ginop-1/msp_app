@@ -21,8 +21,8 @@ class TestApp(TestBase):
         try:
           app.start()
         except:
-          self.assertEqual(1, 1)
-
+          pass
+        self.assertEqual(1,1)
 
 if __name__ == "__main__":
     unittest.main()
