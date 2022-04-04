@@ -21,6 +21,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setup_connectors()
         self.update_ports()
 
+    def disable_buttons(self):
+        self.ConnectButton.setEnabled(False)
+        self.readButton.setEnabled(False)
+        self.ClearButton.setEnabled(False)
+        self.AutomaticReadButton.setEnabled(False)
+        self.StopAutomaticReadModeButton.setEnabled(False)
 
     def setup_connectors(self):
         self.actionAbout.triggered.connect(self.about)
@@ -34,11 +40,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.PortsComboBox.clear()
         self.PortsComboBox.addItems([f"{port.device} - {port.description}" for port in ports])
         if self.PortsComboBox.currentText() == "":
-            self.ConnectButton.setEnabled(False)
+            self.disable_buttons()
             self.timer.start(3000)
         else:
             self.ConnectButton.setText("Connect")
             self.ConnectButton.setEnabled(True)
+            self.readButton.setEnabled(True)
+            self.ClearButton.setEnabled(True)
+            self.AutomaticReadButton.setEnabled(True)
             self.timer.stop()
 
     def start_automatic_read_mode(self):
